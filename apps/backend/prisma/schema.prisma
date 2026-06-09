@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  avatarUrl    String?
+  role         Role     @default(STUDENT)
+  googleId     String?  @unique
+  githubId     String?  @unique
+
+  enrollments      Enrollment[]
+  lessonProgress   LessonProgress[]
+  projectSubmissions ProjectSubmission[]
+  certificates     Certificate[]
+  mentorConversations MentorConversation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String
+  level        String
+  category     String
+  thumbnailUrl String?
+  isPublished  Boolean  @default(false)
+
+  modules    Module[]
+  projects   Project[]
+  enrollments Enrollment[]
+  certificates Certificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Module {
+  id        String @id @default(cuid())
+  courseId   String
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  sortOrder Int
+
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+}
+
+model Lesson {
+  id       String @id @default(cuid())
+  moduleId  String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title    String
+  youtubeUrl String?
+  content  String?
+  sortOrder Int
+
+  progress LessonProgress[]
+  mentorConversations MentorConversation[]
+
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id           String @id @default(cuid())
+  courseId      String
+  course       Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  requirements Json?
+  rubric       Json?
+  sortOrder    Int
+
+  submissions ProjectSubmission[]
+
+  createdAt DateTime @default(now())
+}
+
+model Enrollment {
+  id             String   @id @default(cuid())
+  userId          String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId         String
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status         String   @default("ACTIVE")
+  progressPercent Float   @default(0)
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId       String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([userId, lessonId])
+}
+
+model ProjectSubmission {
+  id              String   @id @default(cuid())
+  userId           String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId        String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  repoUrl         String?
+  demoUrl         String?
+  description     String?
+  status          String   @default("PENDING")
+  aiReviewScore   Float?
+  aiReviewFeedback String?
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+
+  @@unique([userId, projectId])
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  userId      String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  certNumber String   @unique
+  verifyUrl  String
+  issuedAt   DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model MentorConversation {
+  id           String   @id @default(cuid())
+  userId        String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId      String
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  context      Json?
+  createdAt    DateTime @default(now())
+
+  messages MentorMessage[]
+}
+
+model MentorMessage {
+  id             String   @id @default(cuid())
+  conversationId  String
+  conversation   MentorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+}
