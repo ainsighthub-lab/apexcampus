@@ -1,9 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import TiltCard from '@/components/tilt-card';
 import { ArrowRight, Sparkles, BookOpen, Bot, Award, GraduationCap, Play } from 'lucide-react';
+
+// Dynamic import with SSR disabled for Three.js component
+const Hero3D = dynamic(() => import('@/components/hero-3d'), { ssr: false });
 
 const features = [
   {
@@ -36,11 +41,11 @@ const courses = [
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-emerald-500/[0.03]" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/[0.02] rounded-full blur-[120px]" />
-      </div>
+      {/* 3D Hero Background */}
+      <Hero3D />
+
+      {/* Gradient overlay for readability */}
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-background/60 via-background/20 to-background z-[1]" />
 
       {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/60 backdrop-blur-xl">
@@ -65,7 +70,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className="relative py-20 md:py-32 overflow-hidden z-[2]">
         <div className="container mx-auto relative px-4 text-center">
           <div className="animate-slide-up">
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15" variant="secondary">
@@ -110,7 +115,7 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="border-t border-border py-20 relative">
+      <section id="features" className="border-t border-border py-20 relative z-[2]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-heading font-bold text-foreground mb-3">Why ApexCampus?</h2>
@@ -118,22 +123,24 @@ export default function HomePage() {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {features.map((f, i) => (
-              <Card key={f.title} className={`glass glass-hover border-0 transition-all duration-300 animate-slide-up stagger-${i + 1}`}>
-                <CardHeader>
-                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-4`}>
-                    <f.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="font-heading text-foreground">{f.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground/80">{f.description}</CardDescription>
-                </CardHeader>
-              </Card>
+              <TiltCard key={f.title} tiltDegree={6}>
+                <Card className={`glass glass-hover border-0 transition-all duration-300 animate-slide-up stagger-${i + 1}`}>
+                  <CardHeader>
+                    <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-4`}>
+                      <f.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <CardTitle className="font-heading text-foreground">{f.title}</CardTitle>
+                    <CardDescription className="text-muted-foreground/80">{f.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </TiltCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* Courses */}
-      <section id="courses" className="border-t border-border py-20 relative">
+      <section id="courses" className="border-t border-border py-20 relative z-[2]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-heading font-bold text-foreground mb-3">Available Courses</h2>
@@ -141,29 +148,31 @@ export default function HomePage() {
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
             {courses.map((c, i) => (
-              <Card key={c.title} className={`glass glass-hover border-0 transition-all duration-300 animate-slide-up stagger-${i + 1} group`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className={`text-[10px] ${c.color}`}>{c.level}</Badge>
-                  </div>
-                  <CardTitle className="text-base text-foreground group-hover:text-primary transition-colors">{c.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground mb-3">{c.category}</p>
-                  <a href="/auth">
-                    <Button variant="outline" size="sm" className="w-full gap-2 border-border text-muted-foreground hover:text-foreground">
-                      Enroll <ArrowRight className="h-3 w-3" />
-                    </Button>
-                  </a>
-                </CardContent>
-              </Card>
+              <TiltCard key={c.title} tiltDegree={8}>
+                <Card className={`glass glass-hover border-0 transition-all duration-300 animate-slide-up stagger-${i + 1} group cursor-pointer h-full`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary" className={`text-[10px] ${c.color}`}>{c.level}</Badge>
+                    </div>
+                    <CardTitle className="text-base text-foreground group-hover:text-primary transition-colors">{c.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-3">{c.category}</p>
+                    <a href="/auth">
+                      <Button variant="outline" size="sm" className="w-full gap-2 border-border text-muted-foreground hover:text-foreground">
+                        Enroll <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              </TiltCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="border-t border-border py-20 relative">
+      <section className="border-t border-border py-20 relative z-[2]">
         <div className="container mx-auto px-4 text-center">
           <Card className="glass border-0 max-w-2xl mx-auto">
             <CardContent className="p-10">
@@ -181,7 +190,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 mt-auto">
+      <footer className="border-t border-border py-8 mt-auto relative z-[2]">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <div className="flex items-center justify-center gap-2 mb-2">
             <GraduationCap className="h-4 w-4 text-primary" />
